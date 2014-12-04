@@ -106,10 +106,14 @@ def fetch_tax_info_for_order(order):
 
 def fetch_tax_info(user, basket, shipping_address, shipping_method):
     # Look for a cache hit first
+	if isinstance(shipping_method, Free):
+	        shipping_charge = 0
+	    else:
+	        shipping_method.charge_excl_tax
     payload = _build_payload(
         'SalesOrder', 'basket-%d' % basket.id,
         user, basket.all_lines(), shipping_address,
-        unicode(shipping_method.name), shipping_method.charge_excl_tax,
+        unicode(shipping_method.name), shipping_charge,
         commit=False)
     key = _build_cache_key(payload)
     data = cache.get(key)
