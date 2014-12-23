@@ -9,8 +9,7 @@ import zlib
 from django.core.cache import cache
 from django.core import exceptions
 from django.conf import settings
-from oscar.core.loading import get_class
-from oscar.apps.order.models import Line as OrderLine
+from oscar.core.loading import get_class, get_model
 
 from . import gateway
 
@@ -134,6 +133,7 @@ def fetch_tax_info(user, basket, shipping_address, shipping_method, shipping_cha
 
 def _build_payload(doc_type, doc_code, user, lines, shipping_address,
                    shipping_method, shipping_charge, commit):
+    OrderLine = get_model('order', 'Line')
     payload = {}
 
     # Use a single company code for now
