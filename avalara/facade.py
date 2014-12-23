@@ -9,7 +9,8 @@ import zlib
 from django.core.cache import cache
 from django.core import exceptions
 from django.conf import settings
-from oscar.core.loading import get_class, get_model
+from oscar.core.loading import get_class
+from oscar.apps.order.models import Line as OrderLine
 
 from . import gateway
 
