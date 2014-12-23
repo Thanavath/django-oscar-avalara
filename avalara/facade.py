@@ -15,7 +15,7 @@ from . import gateway
 
 OrderTotalCalculator = get_class(
     'checkout.calculators', 'OrderTotalCalculator')
-OrderLine = get_model('order', 'Line')
+OrderLine = get_class('order.models', 'Line')
 
 __all__ = ['apply_taxes_to_submission', 'apply_taxes', 'submit', 'fetch_tax_info']
 
