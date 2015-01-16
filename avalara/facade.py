@@ -73,15 +73,18 @@ def apply_taxes(user, basket, shipping_address, shipping_method, shipping_charge
     shipping_charge.tax = line_taxes['SHIPPING']
 
 
-def submit(order):
+def submit(order, lines, line_quantities):
     """
     Submit tax information from an order
     """
+    for line, qty_to_consume in zip(lines, line_quantities):
+        line.quantity = qty_to_consume
+
     payload = _build_payload(
         'SalesInvoice',
         order.number,
         order.user,
-        order.lines.all(),
+        lines,
         order.shipping_address,
         unicode(order.shipping_method),
         order.shipping_excl_tax,
@@ -195,7 +198,7 @@ def _build_payload(doc_type, doc_code, user, lines, shipping_address,
         # We distinguish between order and basket lines (which have slightly
         # different APIs).
         if isinstance(line, OrderLine):
-            line_payload['Amount'] = str(line.line_price_excl_tax)
+            line_payload['Amount'] = str(line.unit_price_excl_tax * line.quantity)
         else:
             line_payload['Amount'] = str(line.line_price_excl_tax_incl_discounts)
 
