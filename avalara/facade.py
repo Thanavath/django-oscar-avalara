@@ -9,13 +9,13 @@ import zlib
 from django.core.cache import cache
 from django.core import exceptions
 from django.conf import settings
-from oscar.core.loading import get_class, get_model
+from oscar.core.loading import get_class
+from oscar.apps.order.models import Line as OrderLine
 
 from . import gateway
 
 OrderTotalCalculator = get_class(
     'checkout.calculators', 'OrderTotalCalculator')
-OrderLine = get_model('order', 'Line')
 
 __all__ = ['apply_taxes_to_submission', 'apply_taxes', 'submit', 'fetch_tax_info']
 
@@ -73,19 +73,27 @@ def apply_taxes(user, basket, shipping_address, shipping_method, shipping_charge
     shipping_charge.tax = line_taxes['SHIPPING']
 
 
-def submit(order):
+def submit(order, lines=None, line_quantities=None):
     """
     Submit tax information from an order
+    If lines isn't set, all lines in the order will be submitted
+    If line_quantities isn't set, the total quantity for each line will be submitted
     """
+    lines = lines or order.lines.all()
+    line_quantities = line_quantities or [l.quantity for l in lines]
+    for line, qty_to_consume in zip(lines, line_quantities):
+        line.quantity = qty_to_consume
+
     payload = _build_payload(
         'SalesInvoice',
         order.number,
         order.user,
-        order.lines.all(),
+        lines,
         order.shipping_address,
         unicode(order.shipping_method),
         order.shipping_excl_tax,
         commit=True)
+
     gateway.post_tax(payload)
 
 
@@ -195,7 +203,7 @@ def _build_payload(doc_type, doc_code, user, lines, shipping_address,
         # We distinguish between order and basket lines (which have slightly
         # different APIs).
         if isinstance(line, OrderLine):
-            line_payload['Amount'] = str(line.line_price_excl_tax)
+            line_payload['Amount'] = str(line.unit_price_excl_tax * line.quantity)
         else:
             line_payload['Amount'] = str(line.line_price_excl_tax_incl_discounts)
 
