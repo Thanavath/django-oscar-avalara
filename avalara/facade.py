@@ -203,7 +203,7 @@ def _build_payload(doc_type, doc_code, user, lines, shipping_address,
         # We distinguish between order and basket lines (which have slightly
         # different APIs).
         if isinstance(line, OrderLine):
-            line_payload['Amount'] = str(line.unit_price_excl_tax * line.quantity)
+            line_payload['Amount'] = str(line.total_unit_price_incl_discount)
         else:
             line_payload['Amount'] = str(line.line_price_excl_tax_incl_discounts)
 
